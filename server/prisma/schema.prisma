@@ -76,21 +76,21 @@ enum OTPStatus {
 // ============================================================
 
 model User {
-  id             String   @id @default(cuid())
-  phone          String   @unique // Normalized: +998XXXXXXXXX
-  name           String
-  role           Role     @default(CUSTOMER)
-  avatarUrl      String?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id        String   @id @default(cuid())
+  phone     String   @unique // Normalized: +998XXXXXXXXX
+  name      String
+  role      Role     @default(CUSTOMER)
+  avatarUrl String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  customerProfile CustomerProfile?
-  cafeStaff       CafeStaff[]
+  customerProfile  CustomerProfile?
+  cafeStaff        CafeStaff[]
   otpVerifications OTPVerification[]
-  auditLogs       AuditLog[]       @relation("AuditActor")
-  sessions        Session[]
+  auditLogs        AuditLog[]        @relation("AuditActor")
+  sessions         Session[]
 
   @@index([phone])
   @@index([role])
@@ -115,7 +115,7 @@ model Session {
 model OTPVerification {
   id         String    @id @default(cuid())
   phone      String
-  code       String    // Hashed OTP
+  code       String // Hashed OTP
   status     OTPStatus @default(PENDING)
   attempts   Int       @default(0)
   expiresAt  DateTime
@@ -134,23 +134,23 @@ model OTPVerification {
 // ============================================================
 
 model CustomerProfile {
-  id           String        @id @default(cuid())
-  userId       String        @unique
-  totalPoints  Int           @default(0) // Denormalized for performance; source of truth is LoyaltyTransaction
-  totalVisits  Int           @default(0)
-  totalSpent   Int           @default(0) // in tiyin (100 UZS = 1 tiyin? No: in UZS directly)
-  level        CustomerLevel @default(BRONZE)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  totalPoints Int           @default(0) // Denormalized for performance; source of truth is LoyaltyTransaction
+  totalVisits Int           @default(0)
+  totalSpent  Int           @default(0) // in tiyin (100 UZS = 1 tiyin? No: in UZS directly)
+  level       CustomerLevel @default(BRONZE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   loyaltyTransactions LoyaltyTransaction[]
-  rewardRedemptions RewardRedemption[]
-  giftCards         GiftCard[]           @relation("GiftCardOwner")
-  giftCardRedemptions GiftCard[]         @relation("GiftCardRedeemer")
-  purchases         Purchase[]
-  qrSessions        QRSession[]
-  favoriteCafes     FavoriteCafe[]
+  rewardRedemptions   RewardRedemption[]
+  giftCards           GiftCard[]           @relation("GiftCardOwner")
+  giftCardRedemptions GiftCard[]           @relation("GiftCardRedeemer")
+  purchases           Purchase[]
+  qrSessions          QRSession[]
+  favoriteCafes       FavoriteCafe[]
 
   @@index([userId])
   @@index([level])
@@ -158,7 +158,7 @@ model CustomerProfile {
 }
 
 model FavoriteCafe {
-  id         String @id @default(cuid())
+  id         String   @id @default(cuid())
   customerId String
   cafeId     String
   createdAt  DateTime @default(now())
@@ -189,33 +189,33 @@ model Cafe {
   updatedAt     DateTime   @updatedAt
 
   // Relations
-  branches    CafeBranch[]
-  staff       CafeStaff[]
-  purchases   Purchase[]
-  rewards     Reward[]
-  promotions  Promotion[]
-  giftCards   GiftCard[]
+  branches            CafeBranch[]
+  staff               CafeStaff[]
+  purchases           Purchase[]
+  rewards             Reward[]
+  promotions          Promotion[]
+  giftCards           GiftCard[]
   loyaltyTransactions LoyaltyTransaction[]
-  qrSessions  QRSession[]
-  favoriteCafes FavoriteCafe[]
+  qrSessions          QRSession[]
+  favoriteCafes       FavoriteCafe[]
 
   @@index([status])
   @@index([city])
 }
 
 model CafeBranch {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   cafeId    String
   name      String
   address   String
   phone     String?
-  isActive  Boolean @default(true)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cafe      Cafe      @relation(fields: [cafeId], references: [id], onDelete: Cascade)
-  staff     CafeStaff[]
-  purchases Purchase[]
+  cafe                Cafe                 @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  staff               CafeStaff[]
+  purchases           Purchase[]
   loyaltyTransactions LoyaltyTransaction[]
 
   @@index([cafeId])
@@ -245,22 +245,22 @@ model CafeStaff {
 // ============================================================
 
 model Purchase {
-  id             String   @id @default(cuid())
-  customerId     String
-  cafeId         String
-  branchId       String?
-  staffId        String?  // CafeStaff.id who processed
-  amount         Int      // Total in UZS
-  pointsEarned   Int      @default(0)
-  itemsJson      String   // JSON stringified array of items
-  promotionId    String?
-  createdAt      DateTime @default(now())
+  id           String   @id @default(cuid())
+  customerId   String
+  cafeId       String
+  branchId     String?
+  staffId      String? // CafeStaff.id who processed
+  amount       Int // Total in UZS
+  pointsEarned Int      @default(0)
+  itemsJson    String // JSON stringified array of items
+  promotionId  String?
+  createdAt    DateTime @default(now())
 
-  customer   CustomerProfile    @relation(fields: [customerId], references: [id])
-  cafe       Cafe               @relation(fields: [cafeId], references: [id])
-  branch     CafeBranch?        @relation(fields: [branchId], references: [id])
-  loyaltyTx  LoyaltyTransaction?
-  promotion  Promotion?         @relation(fields: [promotionId], references: [id])
+  customer  CustomerProfile     @relation(fields: [customerId], references: [id])
+  cafe      Cafe                @relation(fields: [cafeId], references: [id])
+  branch    CafeBranch?         @relation(fields: [branchId], references: [id])
+  loyaltyTx LoyaltyTransaction?
+  promotion Promotion?          @relation(fields: [promotionId], references: [id])
 
   @@index([customerId])
   @@index([cafeId])
@@ -273,23 +273,23 @@ model Purchase {
 // ============================================================
 
 model LoyaltyTransaction {
-  id          String                 @id @default(cuid())
-  customerId  String
-  cafeId      String
-  branchId    String?
-  type        LoyaltyTransactionType
-  points      Int                    // Positive for earn/bonus, negative for redeem/expire
-  balanceAfter Int                   // Snapshot of balance after this transaction
-  description String
-  purchaseId  String?                @unique // One-to-one with purchase if type=EARN
-  rewardRedemptionId String?         @unique
-  performedBy String?                // User ID who performed the action
-  createdAt   DateTime               @default(now())
+  id           String                 @id @default(cuid())
+  customerId   String
+  cafeId       String
+  branchId     String?
+  type         LoyaltyTransactionType
+  points       Int // Positive for earn/bonus, negative for redeem/expire
+  balanceAfter Int // Snapshot of balance after this transaction
+  description  String
+  purchaseId   String?                @unique // One-to-one with purchase if type=EARN
+  performedBy  String? // User ID who performed the action
+  createdAt    DateTime               @default(now())
 
-  customer         CustomerProfile    @relation(fields: [customerId], references: [id])
-  cafe             Cafe               @relation(fields: [cafeId], references: [id])
-  branch           CafeBranch?        @relation(fields: [branchId], references: [id])
-  purchase         Purchase?          @relation(fields: [purchaseId], references: [id])
+  customer         CustomerProfile   @relation(fields: [customerId], references: [id])
+  cafe             Cafe              @relation(fields: [cafeId], references: [id])
+  branch           CafeBranch?       @relation(fields: [branchId], references: [id])
+  purchase         Purchase?         @relation(fields: [purchaseId], references: [id])
+  rewardRedemption RewardRedemption?
 
   @@index([customerId, createdAt])
   @@index([cafeId, createdAt])
@@ -307,7 +307,7 @@ model Reward {
   description String?
   pointsCost  Int
   type        RewardType
-  value       Int?       // Discount percentage or item value
+  value       Int? // Discount percentage or item value
   isActive    Boolean    @default(true)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -320,19 +320,19 @@ model Reward {
 }
 
 model RewardRedemption {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   customerId String
   rewardId   String
   cafeId     String
   pointsUsed Int
-  status     String   @default("ACTIVE") // ACTIVE, USED, EXPIRED
-  redeemedAt DateTime @default(now())
+  status     String    @default("ACTIVE") // ACTIVE, USED, EXPIRED
+  redeemedAt DateTime  @default(now())
   usedAt     DateTime?
 
-  customer CustomerProfile    @relation(fields: [customerId], references: [id])
-  reward   Reward             @relation(fields: [rewardId], references: [id])
-  loyaltyTx LoyaltyTransaction? @relation(fields: [loyaltyTxId], references: [id])
-  loyaltyTxId String?         @unique
+  customer    CustomerProfile     @relation(fields: [customerId], references: [id])
+  reward      Reward              @relation(fields: [rewardId], references: [id])
+  loyaltyTx   LoyaltyTransaction? @relation(fields: [loyaltyTxId], references: [id])
+  loyaltyTxId String?             @unique
 
   @@index([customerId])
   @@index([rewardId])
@@ -343,20 +343,20 @@ model RewardRedemption {
 // ============================================================
 
 model Promotion {
-  id              String         @id @default(cuid())
+  id              String        @id @default(cuid())
   cafeId          String
   title           String
   description     String?
   type            PromotionType
-  multiplier      Float?         // For DOUBLE_POINTS
-  discountPercent Int?           // For DISCOUNT
+  multiplier      Float? // For DOUBLE_POINTS
+  discountPercent Int? // For DISCOUNT
   startDate       DateTime
   endDate         DateTime
-  isActive        Boolean        @default(true)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  cafe     Cafe       @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  cafe      Cafe       @relation(fields: [cafeId], references: [id], onDelete: Cascade)
   purchases Purchase[]
 
   @@index([cafeId])
@@ -371,17 +371,17 @@ model GiftCard {
   id             String         @id @default(cuid())
   cafeId         String
   code           String         @unique
-  balance        Int            // Remaining in UZS
+  balance        Int // Remaining in UZS
   originalAmount Int
   status         GiftCardStatus @default(ACTIVE)
-  purchasedBy    String?        // Customer ID
-  redeemedBy     String?        // Customer ID
+  purchasedBy    String? // Customer ID
+  redeemedBy     String? // Customer ID
   createdAt      DateTime       @default(now())
   expiresAt      DateTime
 
-  cafe       Cafe              @relation(fields: [cafeId], references: [id])
-  purchaser  CustomerProfile?  @relation("GiftCardOwner", fields: [purchasedBy], references: [id])
-  redeemer   CustomerProfile?  @relation("GiftCardRedeemer", fields: [redeemedBy], references: [id])
+  cafe      Cafe             @relation(fields: [cafeId], references: [id])
+  purchaser CustomerProfile? @relation("GiftCardOwner", fields: [purchasedBy], references: [id])
+  redeemer  CustomerProfile? @relation("GiftCardRedeemer", fields: [redeemedBy], references: [id])
 
   @@index([code])
   @@index([cafeId])
@@ -395,8 +395,8 @@ model GiftCard {
 model QRSession {
   id         String    @id @default(cuid())
   customerId String
-  cafeId     String?   // Set when scanned by specific café
-  token      String    // Short-lived 6-digit code shown to the customer and typed in by staff
+  cafeId     String? // Set when scanned by specific café
+  token      String // Short-lived 6-digit code shown to the customer and typed in by staff
   expiresAt  DateTime
   usedAt     DateTime?
   createdAt  DateTime  @default(now())
@@ -415,11 +415,11 @@ model QRSession {
 
 model AuditLog {
   id         String   @id @default(cuid())
-  actorId    String?  // User who performed action
-  action     String   // e.g., "cafe.created", "loyalty.adjusted"
-  entityType String   // e.g., "Cafe", "Customer", "LoyaltyTransaction"
-  entityId   String?  // ID of affected entity
-  metadata   String?  // JSON stringified additional data
+  actorId    String? // User who performed action
+  action     String // e.g., "cafe.created", "loyalty.adjusted"
+  entityType String // e.g., "Cafe", "Customer", "LoyaltyTransaction"
+  entityId   String? // ID of affected entity
+  metadata   String? // JSON stringified additional data
   ipAddress  String?
   createdAt  DateTime @default(now())
 

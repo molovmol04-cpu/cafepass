@@ -118,8 +118,7 @@ export function AuthPage({ mode, onNavigate }: { mode: Page; onNavigate: (page: 
       </button>
 
       <div className="max-w-sm mx-auto">
-        <h1 className="text-2xl font-bold text-espresso-900 mb-2">
-          {step === 'phone' ? (isRegister ? 'Ro\'yxatdan o\'tish' : 'Kirish') : 'Tasdiqlash kodi'}
+        <h1 className="font-display text-2xl font-semibold text-espresso-900 mb-2">{step === 'phone' ? (isRegister ? 'Ro\'yxatdan o\'tish' : 'Kirish') : 'Tasdiqlash kodi'}
         </h1>
         <p className="text-espresso-500 mb-6">
           {step === 'phone' 
@@ -203,6 +202,11 @@ export function AuthPage({ mode, onNavigate }: { mode: Page; onNavigate: (page: 
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace' && !digit && i > 0) {
+                      document.getElementById(`otp-${i - 1}`)?.focus();
+                    }
+                  }}
                   className="w-14 h-14 text-center text-xl font-bold bg-white border-2 border-espresso-200 rounded-xl focus:border-coffee-400 focus:ring-2 focus:ring-coffee-100 outline-none transition-all"
                 />
               ))}

@@ -22,9 +22,12 @@ employeeRouter.post('/scan', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'QR token talab qilinadi' });
     }
 
-    // Find valid QR session
-    const session = await prisma.qRSession.findUnique({
-      where: { token },
+    // Find the most recent session with this code. Codes are short
+    // (6 digits) so they can repeat across customers over time — only
+    // the newest one is ever within its 60s validity window anyway.
+    const session = await prisma.qRSession.findFirst({
+      where: { token: String(token) },
+      orderBy: { createdAt: 'desc' },
       include: {
         customer: {
           include: {

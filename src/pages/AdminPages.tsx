@@ -58,7 +58,7 @@ function AdminDashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
               <Shield className="w-4 h-4 text-coffee-400" />
               <p className="text-cream-400 text-xs">Platform Administrator</p>
             </div>
-            <h1 className="text-xl font-bold text-white">CaféPass Admin</h1>
+            <h1 className="font-display text-xl font-bold text-white">CaféPass Admin</h1>
           </div>
           <button onClick={() => onNavigate('admin-add-cafe')} className="px-4 py-2 bg-coffee-500 text-white text-sm font-medium rounded-xl active:scale-95 transition-transform flex items-center gap-1">
             <Plus className="w-4 h-4" /> Kafe
@@ -91,7 +91,7 @@ function AdminDashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
 
       {/* Quick Actions */}
       <div className="px-6 mt-6">
-        <h2 className="font-bold text-espresso-900 mb-3">Boshqarish</h2>
+        <h2 className="font-display font-bold text-espresso-900 mb-3">Boshqarish</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
             { icon: Coffee, label: 'Kafelar', page: 'admin-cafes' as Page, count: DEMO_STATS.totalCafes },
@@ -115,7 +115,7 @@ function AdminDashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
       {/* Recent Cafes */}
       <div className="px-6 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-espresso-900">Oxirgi kafelar</h2>
+          <h2 className="font-display font-bold text-espresso-900">Oxirgi kafelar</h2>
           <button onClick={() => onNavigate('admin-cafes')} className="text-xs text-coffee-600 font-medium">Barchasi →</button>
         </div>
         <div className="space-y-2">
@@ -152,7 +152,7 @@ function AdminCafes({ onNavigate }: { onNavigate: (page: Page) => void }) {
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-espresso-900">Kafelar</h1>
+          <h1 className="font-display text-2xl font-bold text-espresso-900">Kafelar</h1>
           <button onClick={() => onNavigate('admin-add-cafe')} className="px-4 py-2 bg-coffee-500 text-white text-sm font-medium rounded-xl active:scale-95 transition-transform flex items-center gap-1">
             <Plus className="w-4 h-4" /> Qo'shish
           </button>
@@ -225,7 +225,7 @@ function AdminAddCafe({ onNavigate }: { onNavigate: (page: Page) => void }) {
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
             <Check className="w-10 h-10 text-emerald-600" />
           </div>
-          <h2 className="text-xl font-bold text-espresso-900 mb-2">Kafe muvaffaqiyatli qo'shildi!</h2>
+          <h2 className="font-display text-xl font-bold text-espresso-900 mb-2">Kafe muvaffaqiyatli qo'shildi!</h2>
           <p className="text-sm text-espresso-500">Egasi tez orada tizimga kirishi mumkin</p>
         </motion.div>
       </div>
@@ -238,7 +238,7 @@ function AdminAddCafe({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <button onClick={() => onNavigate('admin-dashboard')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900 mb-1">Yangi kafe qo'shish</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900 mb-1">Yangi kafe qo'shish</h1>
         <p className="text-sm text-espresso-500">Kafe, egasi va filial ma'lumotlarini kiriting</p>
       </div>
 
@@ -298,7 +298,7 @@ function AdminAuditLogs({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <button onClick={() => onNavigate('admin-dashboard')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900">Audit loglari</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900">Audit loglari</h1>
       </div>
       <div className="px-6 mt-4 space-y-2">
         {DEMO_AUDIT_LOGS.map((log, i) => (
@@ -329,7 +329,7 @@ function AdminGenericPage({ title, onNavigate }: { title: string; onNavigate: (p
         <button onClick={() => onNavigate('admin-dashboard')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900">{title}</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900">{title}</h1>
       </div>
       <div className="px-6 mt-4">
         <div className="p-8 text-center bg-white rounded-2xl">

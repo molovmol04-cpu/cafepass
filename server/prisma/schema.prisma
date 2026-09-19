@@ -396,7 +396,7 @@ model QRSession {
   id         String    @id @default(cuid())
   customerId String
   cafeId     String?   // Set when scanned by specific café
-  token      String    @unique // Short-lived secure token
+  token      String    // Short-lived 6-digit code shown to the customer and typed in by staff
   expiresAt  DateTime
   usedAt     DateTime?
   createdAt  DateTime  @default(now())

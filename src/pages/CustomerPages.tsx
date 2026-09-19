@@ -64,7 +64,7 @@ function CustomerHome({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-cream-400 text-sm">Salom,</p>
-            <h1 className="text-xl font-bold text-white">{name}</h1>
+            <h1 className="font-display text-xl font-bold text-white">{name}</h1>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => onNavigate('customer-qr')} className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
@@ -106,7 +106,7 @@ function CustomerHome({ onNavigate }: { onNavigate: (page: Page) => void }) {
       <div className="px-6 -mt-4">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { icon: QrCode, label: 'QR kod', page: 'customer-qr' as Page, color: 'from-coffee-400 to-coffee-500' },
+            { icon: QrCode, label: 'Mening kodim', page: 'customer-qr' as Page, color: 'from-coffee-400 to-coffee-500' },
             { icon: Gift, label: 'Sovg\'alar', page: 'customer-rewards' as Page, color: 'from-rose-400 to-rose-500' },
             { icon: MapPin, label: 'Kafelar', page: 'customer-cafes' as Page, color: 'from-emerald-400 to-emerald-500' },
           ].map((action, i) => (
@@ -140,7 +140,7 @@ function CustomerHome({ onNavigate }: { onNavigate: (page: Page) => void }) {
       {/* Recent Activity */}
       <div className="px-6 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-espresso-900">So'nggi harakatlar</h2>
+          <h2 className="font-display font-bold text-espresso-900">So'nggi harakatlar</h2>
           <button onClick={() => onNavigate('customer-history')} className="text-xs text-coffee-600 font-medium">Barchasi →</button>
         </div>
         <div className="space-y-2">
@@ -199,33 +199,11 @@ function CustomerQR({ onNavigate }: { onNavigate: (page: Page) => void }) {
         setError(result.error);
       }
     } catch (err) {
-      setError('QR kod yaratishda xatolik');
+      setError('Kod yaratishda xatolik');
     } finally {
       setLoading(false);
     }
   };
-
-  const generateQRPattern = () => {
-    const size = 21;
-    const pattern: boolean[][] = [];
-    // Use token as seed for visual pattern
-    const seed = qrToken ? qrToken.charCodeAt(0) + timeLeft : timeLeft;
-    for (let i = 0; i < size; i++) {
-      pattern[i] = [];
-      for (let j = 0; j < size; j++) {
-        if ((i < 7 && j < 7) || (i < 7 && j >= size - 7) || (i >= size - 7 && j < 7)) {
-          const isOuter = i === 0 || i === 6 || j === 0 || j === 6 || (i < 7 && (j === size - 7 || j === size - 1)) || (i >= size - 7 && (j === 0 || j === 6)) || (j < 7 && (i === size - 7 || i === size - 1)) || (j >= size - 7 && (i === 0 || i === 6));
-          const isInner = (i >= 2 && i <= 4 && j >= 2 && j <= 4) || (i >= 2 && i <= 4 && j >= size - 5 && j <= size - 3) || (i >= size - 5 && i <= size - 3 && j >= 2 && j <= 4);
-          pattern[i][j] = isOuter || isInner;
-        } else {
-          pattern[i][j] = ((i * 7 + j * 13 + seed) % 3) !== 0;
-        }
-      }
-    }
-    return pattern;
-  };
-
-  const qrPattern = generateQRPattern();
 
   return (
     <div className="min-h-screen bg-espresso-950 flex flex-col items-center justify-center px-6">
@@ -233,44 +211,44 @@ function CustomerQR({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
       </button>
       <div className="text-center mb-8">
-        <h1 className="text-xl font-bold text-white mb-1">Sizning QR kodingiz</h1>
-        <p className="text-sm text-espresso-400">Kafedochi ushbu kodni skanerlaydi</p>
+        <h1 className="font-display text-2xl font-semibold text-white mb-1">Sizning kodingiz</h1>
+        <p className="text-sm text-espresso-400">Kassadagi xodimga shu kodni ayting yoki ko'rsating</p>
       </div>
-      <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2, type: 'spring' }} className="relative">
-        <div className="w-64 h-64 bg-white rounded-3xl p-4 shadow-2xl shadow-black/30">
-          <div className="w-full h-full relative">
-            <div className="grid grid-cols-[repeat(21,1fr)] gap-[1px] w-full h-full">
-              {qrPattern.flat().map((filled, idx) => (
-                <div key={idx} className={`rounded-[1px] ${filled ? 'bg-espresso-900' : 'bg-white'}`} />
-              ))}
+
+      <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.15, type: 'spring' }} className="relative">
+        <div className="w-full max-w-xs bg-white rounded-3xl px-8 py-10 shadow-2xl shadow-black/30 text-center">
+          {loading && !qrToken ? (
+            <div className="h-14 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-coffee-300 border-t-coffee-600 rounded-full animate-spin" />
             </div>
-            <div className="absolute left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-coffee-500 to-transparent animate-qr-scan" />
+          ) : error ? (
+            <p className="text-sm text-rose-500">{error}</p>
+          ) : (
+            <p className="font-display text-5xl font-semibold tracking-[0.15em] text-espresso-900">
+              {qrToken.slice(0, 3)} {qrToken.slice(3)}
+            </p>
+          )}
+          <div className="mt-5 h-1.5 bg-espresso-100 rounded-full overflow-hidden">
+            <motion.div
+              key={qrToken}
+              initial={{ width: '100%' }}
+              animate={{ width: '0%' }}
+              transition={{ duration: 60, ease: 'linear' }}
+              className="h-full bg-coffee-500 rounded-full"
+            />
           </div>
         </div>
-        <div className="absolute inset-0 rounded-3xl animate-pulse-glow" />
+        <div className="absolute inset-0 rounded-3xl animate-pulse-glow pointer-events-none" />
       </motion.div>
-      <div className="mt-8 text-center">
+
+      <div className="mt-6 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full">
           <Clock className="w-4 h-4 text-coffee-400" />
           <span className="text-sm text-white font-medium">{timeLeft}s</span>
         </div>
-        <p className="text-xs text-espresso-500 mt-2">Kod har 60 soniyada yangilanadi</p>
+        <p className="text-xs text-espresso-500 mt-2">Kod har 60 soniyada avtomatik yangilanadi</p>
       </div>
-      
-      {/* QR Token - for dev testing */}
-      {qrToken && (
-        <div className="mt-4 p-3 bg-white/5 rounded-xl max-w-xs">
-          <p className="text-xs text-espresso-400 mb-1">QR Token (dev):</p>
-          <p className="text-xs text-white font-mono break-all">{qrToken}</p>
-          <button 
-            onClick={() => navigator.clipboard.writeText(qrToken)}
-            className="mt-2 text-xs text-coffee-400 hover:text-coffee-300"
-          >
-            📋 Nusxa olish
-          </button>
-        </div>
-      )}
-      
+
       <div className="mt-6 text-center">
         <p className="text-lg font-semibold text-white">{user?.name || 'Sardor Karimov'}</p>
       </div>
@@ -288,7 +266,7 @@ function CustomerCafes({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <button onClick={() => onNavigate('customer-home')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900 mb-4">Hamkor kafelar</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900 mb-4">Hamkor kafelar</h1>
       </div>
       <div className="px-6 mt-4 space-y-3">
         {DEMO_CAFES.map((cafe, i) => (
@@ -337,7 +315,7 @@ function CustomerRewards({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <button onClick={() => onNavigate('customer-home')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900 mb-1">Sovg'alar</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900 mb-1">Sovg'alar</h1>
         <p className="text-sm text-espresso-500">Sizda <span className="font-bold text-coffee-600">{points}</span> ball mavjud</p>
       </div>
       <div className="px-6 mt-4 space-y-3">
@@ -377,7 +355,7 @@ function CustomerHistory({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <button onClick={() => onNavigate('customer-home')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900">Tarix</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900">Tarix</h1>
       </div>
       <div className="px-6 mt-4 space-y-2">
         {DEMO_TRANSACTIONS.map((tx, i) => (
@@ -420,7 +398,7 @@ function CustomerProfilePage({ onNavigate }: { onNavigate: (page: Page) => void 
             {(user?.name || 'S').charAt(0)}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">{user?.name || DEMO_PROFILE.name}</h1>
+            <h1 className="font-display text-xl font-bold text-white">{user?.name || DEMO_PROFILE.name}</h1>
             <p className="text-sm text-espresso-400">{phone}</p>
             <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: getLevelColor(profile.level) + '30', color: getLevelColor(profile.level) }}>
               <Crown className="w-3 h-3" />{getLevelName(profile.level)}
@@ -453,7 +431,7 @@ function CustomerProfilePage({ onNavigate }: { onNavigate: (page: Page) => void 
 function CustomerBottomNav({ currentPage, onNavigate }: { currentPage: Page; onNavigate: (page: Page) => void }) {
   const tabs = [
     { icon: Home, label: 'Bosh', page: 'customer-home' as Page },
-    { icon: QrCode, label: 'QR', page: 'customer-qr' as Page },
+    { icon: QrCode, label: 'Kod', page: 'customer-qr' as Page },
     { icon: MapPin, label: 'Kafelar', page: 'customer-cafes' as Page },
     { icon: Gift, label: 'Sovg\'alar', page: 'customer-rewards' as Page },
     { icon: User, label: 'Profil', page: 'customer-profile' as Page },

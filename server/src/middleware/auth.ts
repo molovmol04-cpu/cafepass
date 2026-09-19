@@ -72,7 +72,7 @@ export async function loadCafeAccess(req: Request, res: Response, next: NextFunc
       select: { cafeId: true }
     });
 
-    req.cafeIds = staff.map(s => s.cafeId);
+    req.cafeIds = staff.map((s: { cafeId: string }) => s.cafeId);
     next();
   } catch (error) {
     console.error('Load cafe access error:', error);

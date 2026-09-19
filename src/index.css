@@ -33,6 +33,16 @@
   --color-espresso-950: #272220;
   
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+}
+
+/* Display type — used for hero headings, brand name, big numbers.
+   Keeps body copy on Inter for readability, but gives the brand a
+   distinct, warm voice instead of an all-Inter interface. */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
 }
 
 * {

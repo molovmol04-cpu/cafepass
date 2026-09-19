@@ -47,7 +47,7 @@ function EmployeeDashboard({ onNavigate }: { onNavigate: (page: Page) => void })
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-cream-400 text-xs">Xodim paneli</p>
-            <h1 className="text-xl font-bold text-white">{user?.name || 'Xodim'}</h1>
+            <h1 className="font-display text-xl font-bold text-white">{user?.name || 'Xodim'}</h1>
           </div>
           <button onClick={() => onNavigate('employee-scan')} className="w-12 h-12 rounded-xl bg-coffee-500 flex items-center justify-center shadow-lg shadow-coffee-500/30">
             <QrCode className="w-6 h-6 text-white" />
@@ -78,7 +78,7 @@ function EmployeeDashboard({ onNavigate }: { onNavigate: (page: Page) => void })
 
       {/* Quick Actions */}
       <div className="px-6 mt-6">
-        <h2 className="font-bold text-espresso-900 mb-3">Tezkor amallar</h2>
+        <h2 className="font-display font-bold text-espresso-900 mb-3">Tezkor amallar</h2>
         <div className="space-y-3">
           <motion.button 
             initial={{ opacity: 0, y: 10 }} 
@@ -91,7 +91,7 @@ function EmployeeDashboard({ onNavigate }: { onNavigate: (page: Page) => void })
             </div>
             <div className="text-left">
               <h3 className="font-semibold text-espresso-900">Mijozni aniqlash</h3>
-              <p className="text-sm text-espresso-500">QR kodni skanerlang</p>
+              <p className="text-sm text-espresso-500">Mijoz kodini kiriting</p>
             </div>
           </motion.button>
         </div>
@@ -104,6 +104,8 @@ function EmployeeDashboard({ onNavigate }: { onNavigate: (page: Page) => void })
 // EMPLOYEE SCAN - Real API Integration
 // ============================================================
 function EmployeeScan({ onNavigate }: { onNavigate: (page: Page) => void }) {
+  const { user } = useAuth();
+  const myCafeId = user?.cafeStaff?.[0]?.cafeId;
   const [step, setStep] = useState<'scan' | 'customer' | 'purchase' | 'success'>('scan');
   const [qrToken, setQrToken] = useState('');
   const [customer, setCustomer] = useState<any>(null);
@@ -113,8 +115,8 @@ function EmployeeScan({ onNavigate }: { onNavigate: (page: Page) => void }) {
   const [purchaseResult, setPurchaseResult] = useState<any>(null);
 
   const handleScan = async () => {
-    if (!qrToken.trim()) {
-      setError('QR token kiriting');
+    if (qrToken.trim().length !== 6) {
+      setError('6 xonali kodni to\'liq kiriting');
       return;
     }
 
@@ -148,16 +150,18 @@ function EmployeeScan({ onNavigate }: { onNavigate: (page: Page) => void }) {
       return;
     }
 
+    if (!myCafeId) {
+      setError('Sizga hech qanday kafe biriktirilmagan. Administratorga murojaat qiling.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      // Get cafe ID from user context (simplified - in real app, get from employee's assigned cafe)
-      const cafeId = 'demo-cafe-1'; // TODO: Get from actual employee assignment
-      
       const result = await api.processPurchase({
         customerId: customer.id,
-        cafeId: cafeId,
+        cafeId: myCafeId,
         amount: parseInt(amount),
         items: [{ name: 'Xarid', quantity: 1, price: parseInt(amount) }]
       });
@@ -193,18 +197,25 @@ function EmployeeScan({ onNavigate }: { onNavigate: (page: Page) => void }) {
       <AnimatePresence mode="wait">
         {step === 'scan' && (
           <motion.div key="scan" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center w-full max-w-sm">
-            <h1 className="text-xl font-bold text-white mb-2">Mijozni aniqlash</h1>
-            <p className="text-sm text-espresso-400 mb-8">Mijozning QR tokenini kiriting</p>
-            
+            <h1 className="font-display text-xl font-semibold text-white mb-2">Mijozni aniqlash</h1>
+            <p className="text-sm text-espresso-400 mb-8">Mijoz ilovasidagi 6 xonali kodni kiriting</p>
+
             <div className="mb-4">
               <input
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoFocus
                 value={qrToken}
-                onChange={(e) => setQrToken(e.target.value)}
-                placeholder="QR token..."
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-espresso-500 outline-none focus:border-coffee-400"
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setQrToken(digits);
+                  if (error) setError('');
+                }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && qrToken.length === 6) handleScan(); }}
+                placeholder="000000"
+                className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white text-center text-3xl font-display tracking-[0.3em] placeholder:text-espresso-600 outline-none focus:border-coffee-400"
               />
-              <p className="text-xs text-espresso-500 mt-2">Dev rejim: mijoz QR sahifasidan tokenni oling</p>
             </div>
 
             {error && (
@@ -218,10 +229,10 @@ function EmployeeScan({ onNavigate }: { onNavigate: (page: Page) => void }) {
 
             <button 
               onClick={handleScan} 
-              disabled={loading}
-              className="w-full px-8 py-3 bg-coffee-500 text-white font-medium rounded-2xl active:scale-95 transition-transform disabled:opacity-50"
+              disabled={loading || qrToken.length !== 6}
+              className="w-full px-8 py-3 bg-coffee-500 text-white font-medium rounded-2xl active:scale-95 transition-transform disabled:opacity-40"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Skanerlash'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Tasdiqlash'}
             </button>
           </motion.div>
         )}
@@ -231,7 +242,7 @@ function EmployeeScan({ onNavigate }: { onNavigate: (page: Page) => void }) {
             <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
               <Check className="w-10 h-10 text-emerald-400" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-1">Mijoz aniqlandi!</h2>
+            <h2 className="font-display text-xl font-bold text-white mb-1">Mijoz aniqlandi!</h2>
             <p className="text-lg text-cream-300 font-medium">{customer.name}</p>
             
             <div className="mt-6 p-4 bg-white/10 rounded-2xl text-left">
@@ -262,7 +273,7 @@ function EmployeeScan({ onNavigate }: { onNavigate: (page: Page) => void }) {
 
         {step === 'purchase' && (
           <motion.div key="purchase" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="text-center w-full max-w-sm">
-            <h2 className="text-xl font-bold text-white mb-2">Sotuv kiritish</h2>
+            <h2 className="font-display text-xl font-bold text-white mb-2">Sotuv kiritish</h2>
             <p className="text-sm text-espresso-400 mb-6">Mijoz: {customer?.name}</p>
             
             <div className="mb-4">
@@ -310,7 +321,7 @@ function EmployeeScan({ onNavigate }: { onNavigate: (page: Page) => void }) {
             <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
               <Check className="w-10 h-10 text-emerald-400" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Muvaffaqiyatli!</h2>
+            <h2 className="font-display text-xl font-bold text-white mb-2">Muvaffaqiyatli!</h2>
             <p className="text-sm text-espresso-400 mb-6">Xarid qayd etildi va ball berildi</p>
             
             <div className="p-4 bg-white/10 rounded-2xl text-left space-y-2">

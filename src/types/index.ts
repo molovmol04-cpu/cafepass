@@ -15,6 +15,7 @@ export interface User {
   avatarUrl?: string;
   isActive: boolean;
   createdAt: string;
+  cafeStaff?: CafeStaff[];
 }
 
 export interface CustomerProfile {

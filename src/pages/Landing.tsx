@@ -43,7 +43,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (page: Page) => void }
             <Coffee className="w-10 h-10 text-white" />
           </motion.div>
           
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-4xl font-bold text-white mb-3">
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="font-display text-5xl font-semibold text-white mb-3">
             CaféPass
           </motion.h1>
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-lg text-cream-300 mb-2">
@@ -66,19 +66,19 @@ export function LandingPage({ onNavigate }: { onNavigate: (page: Page) => void }
 
       {/* Features */}
       <div className="px-6 py-12">
-        <motion.div variants={staggerContainer} initial="initial" whileInView="animate" viewport={{ once: true }} className="space-y-4">
+        <motion.div variants={staggerContainer} initial="initial" whileInView="animate" viewport={{ once: true }} className="divide-y divide-espresso-100 rounded-2xl bg-white shadow-sm overflow-hidden">
           {[
-            { icon: QrCode, title: 'Tezkor QR', desc: 'Bir skanerlash — ball to\'plang', color: 'from-coffee-400 to-coffee-500' },
-            { icon: Award, title: 'Sodiqlik ballari', desc: 'Har xaridda ball, sovg\'a uchun', color: 'from-amber-400 to-amber-500' },
-            { icon: Gift, title: 'Sovg\'alar', desc: 'Bepul kofe, chegirmalar, sovg\'alar', color: 'from-rose-400 to-rose-500' },
-            { icon: MapPin, title: 'Kafelarni kashf eting', desc: 'Yaqin atrofdagi eng yaxshi kafelar', color: 'from-emerald-400 to-emerald-500' },
+            { icon: QrCode, title: 'Tezkor kod', desc: 'Kodni ayting — ball darhol yoziladi' },
+            { icon: Award, title: 'Sodiqlik ballari', desc: 'Har xaridda ball, sovg\'a uchun' },
+            { icon: Gift, title: 'Sovg\'alar', desc: 'Bepul kofe, chegirmalar, sovg\'alar' },
+            { icon: MapPin, title: 'Kafelarni kashf eting', desc: 'Yaqin atrofdagi eng yaxshi kafelar' },
           ].map((f, i) => (
-            <motion.div key={i} variants={fadeUpItem} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm card-hover">
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center flex-shrink-0`}>
-                <f.icon className="w-6 h-6 text-white" />
+            <motion.div key={i} variants={fadeUpItem} className="flex items-center gap-4 p-4">
+              <div className="w-11 h-11 rounded-full bg-coffee-50 border border-coffee-200 flex items-center justify-center flex-shrink-0">
+                <f.icon className="w-5 h-5 text-coffee-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-espresso-900">{f.title}</h3>
+                <h3 className="font-display font-semibold text-espresso-900 leading-tight">{f.title}</h3>
                 <p className="text-sm text-espresso-500">{f.desc}</p>
               </div>
             </motion.div>
@@ -88,7 +88,7 @@ export function LandingPage({ onNavigate }: { onNavigate: (page: Page) => void }
 
       {/* Partner Cafes */}
       <div className="px-6 pb-12">
-        <h2 className="text-lg font-bold text-espresso-900 mb-4">Hamkor kafelar</h2>
+        <h2 className="font-display text-lg font-semibold text-espresso-900 mb-4">Hamkor kafelar</h2>
         <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
           {DEMO_CAFES.map((cafe, i) => (
             <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="flex-shrink-0 w-40 p-4 bg-white rounded-2xl shadow-sm">

@@ -3,18 +3,33 @@ import crypto from 'crypto';
 
 describe('QR Session Security', () => {
   describe('Token generation', () => {
-    it('should generate secure random token', () => {
-      const token = crypto.randomBytes(32).toString('hex');
-      expect(token).toBeTruthy();
-      expect(token.length).toBe(64); // 32 bytes = 64 hex chars
+    // The customer-facing code is short on purpose (staff type it in at
+    // the till in a few seconds), not a long hex token. See
+    // server/src/routes/customer.ts for the real generator.
+    it('should generate a 6-digit numeric code', () => {
+      const token = crypto.randomInt(100000, 1000000).toString();
+      expect(token).toMatch(/^\d{6}$/);
     });
 
-    it('should generate unique tokens', () => {
+    it('codes should vary across generations', () => {
       const tokens = new Set<string>();
-      for (let i = 0; i < 100; i++) {
-        tokens.add(crypto.randomBytes(32).toString('hex'));
+      for (let i = 0; i < 200; i++) {
+        tokens.add(crypto.randomInt(100000, 1000000).toString());
       }
-      expect(tokens.size).toBe(100); // All unique
+      // With a 900,000-value space and 200 draws, near-certain to see
+      // mostly-unique values — unlike a long hex token, occasional
+      // repeats across *different* 60s windows are expected and fine.
+      expect(tokens.size).toBeGreaterThan(150);
+    });
+
+    it('a 6-digit code is only safe because of the 60s expiry + global rate limit', () => {
+      // 900,000 possible codes, but express-rate-limit caps every IP to
+      // 100 requests / 15 min on all /api/ routes (see server/src/index.ts).
+      // That means at most 100 guesses can ever be made against any single
+      // 60-second-lived code — nowhere near enough to brute-force it.
+      const codeSpace = 900000;
+      const maxGuessesPerWindow = 100;
+      expect(maxGuessesPerWindow / codeSpace).toBeLessThan(0.001);
     });
   });
 
@@ -67,20 +82,17 @@ describe('QR Session Security', () => {
   });
 
   describe('Token format', () => {
-    it('should not contain sensitive data', () => {
-      const token = crypto.randomBytes(32).toString('hex');
-      
-      // Token should be random hex, not containing customer info
-      expect(token).not.toContain('customer');
-      expect(token).not.toContain('phone');
+    it('should not encode any customer info', () => {
+      const token = crypto.randomInt(100000, 1000000).toString();
+
+      // Purely numeric — carries no customer data, unlike e.g. a phone number
       expect(token).not.toContain('+998');
+      expect(/^\d+$/.test(token)).toBe(true);
     });
 
-    it('should be URL-safe', () => {
-      const token = crypto.randomBytes(32).toString('hex');
-      
-      // Hex encoding is URL-safe
-      expect(/^[0-9a-f]+$/.test(token)).toBe(true);
+    it('should be short enough to type at a till', () => {
+      const token = crypto.randomInt(100000, 1000000).toString();
+      expect(token.length).toBe(6);
     });
   });
 });

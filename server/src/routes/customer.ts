@@ -86,8 +86,11 @@ customerRouter.post('/qr', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Profil topilmadi' });
     }
 
-    // Generate secure short-lived token
-    const token = crypto.randomBytes(32).toString('hex');
+    // Generate a short-lived 6-digit code (cryptographically random).
+    // Short on purpose: staff type this in at the till, so it must be
+    // fast to read off a phone screen and fast to enter — a long hex
+    // token is secure but unusable in a real checkout flow.
+    const token = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 60 * 1000); // 60 seconds
 
     // Invalidate any existing active sessions

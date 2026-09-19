@@ -59,7 +59,7 @@ function OwnerDashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-cream-400 text-xs">Boshqaruv paneli</p>
-            <h1 className="text-xl font-bold text-white">{user?.name || 'Artel Coffee'}</h1>
+            <h1 className="font-display text-xl font-bold text-white">{user?.name || 'Artel Coffee'}</h1>
           </div>
           <div className="flex items-center gap-2">
             <button className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
@@ -103,7 +103,7 @@ function OwnerDashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
 
       {/* Weekly Chart */}
       <div className="px-6 mt-6">
-        <h2 className="font-bold text-espresso-900 mb-3">Haftalik statistika</h2>
+        <h2 className="font-display font-bold text-espresso-900 mb-3">Haftalik statistika</h2>
         <div className="p-4 bg-white rounded-2xl shadow-sm">
           <div className="flex items-end justify-between h-32 gap-2">
             {stats.weeklyData.map((day, i) => {
@@ -123,7 +123,7 @@ function OwnerDashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
       {/* Top Customers */}
       <div className="px-6 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-espresso-900">Top mijozlar</h2>
+          <h2 className="font-display font-bold text-espresso-900">Top mijozlar</h2>
           <button onClick={() => onNavigate('owner-customers')} className="text-xs text-coffee-600 font-medium">Barchasi →</button>
         </div>
         <div className="space-y-2">
@@ -144,7 +144,7 @@ function OwnerDashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
 
       {/* Quick Actions */}
       <div className="px-6 mt-6">
-        <h2 className="font-bold text-espresso-900 mb-3">Boshqarish</h2>
+        <h2 className="font-display font-bold text-espresso-900 mb-3">Boshqarish</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
             { icon: Users, label: 'Mijozlar', page: 'owner-customers' as Page },
@@ -177,7 +177,7 @@ function OwnerCustomers({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <button onClick={() => onNavigate('owner-dashboard')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900 mb-1">Mijozlar</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900 mb-1">Mijozlar</h1>
         <p className="text-sm text-espresso-500">{DEMO_CUSTOMERS.length} ta faol mijoz</p>
       </div>
       <div className="px-6 mt-4 space-y-2">
@@ -209,7 +209,7 @@ function OwnerRewards({ onNavigate }: { onNavigate: (page: Page) => void }) {
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-espresso-900">Sovg'alar</h1>
+          <h1 className="font-display text-2xl font-bold text-espresso-900">Sovg'alar</h1>
           <button className="px-4 py-2 bg-coffee-500 text-white text-sm font-medium rounded-xl active:scale-95 transition-transform">+ Qo'shish</button>
         </div>
       </div>
@@ -249,7 +249,7 @@ function OwnerAnalytics({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <button onClick={() => onNavigate('owner-dashboard')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900">Analitika</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900">Analitika</h1>
       </div>
       <div className="px-6 mt-4 space-y-4">
         <div className="p-4 bg-white rounded-2xl shadow-sm">
@@ -293,7 +293,7 @@ function OwnerGenericPage({ title, onNavigate }: { title: string; onNavigate: (p
         <button onClick={() => onNavigate('owner-dashboard')} className="flex items-center gap-1 text-espresso-500 mb-4">
           <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
         </button>
-        <h1 className="text-2xl font-bold text-espresso-900">{title}</h1>
+        <h1 className="font-display text-2xl font-bold text-espresso-900">{title}</h1>
       </div>
       <div className="px-6 mt-4">
         <div className="p-8 text-center bg-white rounded-2xl">

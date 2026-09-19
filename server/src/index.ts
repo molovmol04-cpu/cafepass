@@ -14,7 +14,7 @@ import { prisma } from './lib/prisma.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
 
 // ============================================================
 // MIDDLEWARE

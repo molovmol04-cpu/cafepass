@@ -239,7 +239,7 @@ adminRouter.patch('/cafes/:cafeId', async (req: Request, res: Response) => {
       }
     });
 
-    await createAuditLog(req.userId!, 'cafe.updated', 'Cafe', cafeId, updates, req.ip || undefined);
+    await createAuditLog(req.userId!, 'cafe.updated', 'Cafe', String(cafeId), updates, req.ip || undefined);
 
     res.json({ success: true, cafe });
   } catch (error) {

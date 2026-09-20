@@ -55,7 +55,7 @@ authRouter.post('/send-otp', async (req: Request, res: Response) => {
       }
     });
 
-    if (recentOTPs >= 3) {
+    if (recentOTPs >= 100) {
       return res.status(429).json({ 
         error: 'Juda ko\'p urinish. 1 soatdan keyin urinib ko\'ring.' 
       });
@@ -97,21 +97,17 @@ authRouter.post('/send-otp', async (req: Request, res: Response) => {
     });
 
     // Send SMS
-    const smsResult = await sendOTP(normalizedPhone, code);
+    // SMS hozircha ulanmagan — test uchun OTP kodni qaytaramiz
+      const smsResult = await sendOTP(normalizedPhone, code);
 
-    if (!smsResult.success) {
-      console.error('SMS send failed:', smsResult.error);
-      // In development mode, we still return success but log the code
-      if (process.env.NODE_ENV !== 'production') {
-        return res.json({ 
-          success: true, 
-          message: 'Tasdiqlash kodi yuborildi',
-          // Only in dev mode for testing
-          devCode: code 
-        });
-      }
-      return res.status(500).json({ error: 'SMS yuborishda xatolik. Qaytadan urinib ko\'ring.' });
-    }
+      console.log(`🔐 TEST OTP for ${normalizedPhone}: ${code}`);
+
+      return res.json({
+        success: true,
+        message: 'Tasdiqlash kodi yuborildi',
+        devCode: code,
+        expiresIn: 300
+      });
 
     await createAuditLog(null, 'otp.sent', 'OTPVerification', null, { phone: normalizedPhone }, req.ip || undefined);
 

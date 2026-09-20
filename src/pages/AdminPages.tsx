@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Home, Coffee, Users, BarChart3, FileText, ChevronLeft, Plus, Building2, MapPin, Phone, Clock, Check, Shield, Activity } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import type { Page } from '../types';
+import { api } from '../api/client';
 
 // Demo data
 const DEMO_CAFES = [
@@ -208,14 +209,28 @@ function AdminAddCafe({ onNavigate }: { onNavigate: (page: Page) => void }) {
   });
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = () => {
-    // Validate
+    const handleSubmit = async () => {
     if (!form.name || !form.address || !form.phone || !form.ownerName || !form.ownerPhone) {
       alert('Iltimos, barcha majburiy maydonlarni to\'ldiring');
       return;
     }
-    setSuccess(true);
-    setTimeout(() => onNavigate('admin-cafes'), 2000);
+
+    try {
+      const result = await api.createCafe(form);
+
+      console.log('Cafe created:', result);
+
+      setSuccess(true);
+
+      setTimeout(() => onNavigate('admin-cafes'), 2000);
+    } catch (error: any) {
+      console.error('Cafe creation error:', error);
+
+      alert(
+        error?.message ||
+        'Kafe qo‘shishda xatolik yuz berdi'
+      );
+    }
   };
 
   if (success) {

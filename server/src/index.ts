@@ -21,8 +21,20 @@ const PORT = Number(process.env.PORT) || 3001;
 // ============================================================
 
 app.use(helmet());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://cafepass-six.vercel.app'
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS: Origin ruxsat etilmagan'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));

@@ -1,0 +1,136 @@
+From 4533b6197661f13624405e2f492a877c390efcad Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.local>
+Date: Sun, 20 Sep 2026 13:39:51 +0000
+Subject: [PATCH] fix: stale-role JWT bug + remove debug leftovers
+ (alert/console.log) in AdminCafes
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- middleware/auth.ts: authenticate() now re-fetches the user's current
+  role and isActive status from the DB on every request instead of
+  trusting the JWT payload's role for the full 7-day token lifetime.
+  This is what was causing '+998913472886' to keep showing role:
+  CUSTOMER after being promoted to CAFE_OWNER — the old token was
+  still around. Also means a deactivated user is locked out
+  immediately, not after their token happens to expire.
+- api/client.ts + AdminPages.tsx: getAdminCafes() had no return type,
+  so the caller defensively tried result.data?.cafes || result.cafes
+  || result.data (a symptom of not knowing the real shape). Backend
+  actually returns a flat { cafes, pagination }. Typed the call
+  properly and simplified the caller to match.
+- Removed a leftover alert('ADMIN CAFES ISHLAYAPTI') that was firing
+  on every visit to the admin cafes list in production, plus a stray
+  console.log in cafe creation.
+---
+ server/package-lock.json      |  1 +
+ server/src/middleware/auth.ts | 21 +++++++++++++++++++--
+ src/api/client.ts             |  2 +-
+ src/pages/AdminPages.tsx      |  8 ++------
+ 4 files changed, 23 insertions(+), 9 deletions(-)
+
+diff --git a/server/package-lock.json b/server/package-lock.json
+index 3e193c2..1023a3b 100644
+--- a/server/package-lock.json
++++ b/server/package-lock.json
+@@ -1084,6 +1084,7 @@
+       "version": "2.3.3",
+       "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+       "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
++      "dev": true,
+       "hasInstallScript": true,
+       "license": "MIT",
+       "optional": true,
+diff --git a/server/src/middleware/auth.ts b/server/src/middleware/auth.ts
+index d4d91a1..80db71a 100644
+--- a/server/src/middleware/auth.ts
++++ b/server/src/middleware/auth.ts
+@@ -27,7 +27,7 @@ const jwtSecret = JWT_SECRET || 'dev-secret-do-not-use-in-production';
+ /**
+  * Authentication middleware — validates JWT token
+  */
+-export function authenticate(req: Request, res: Response, next: NextFunction) {
++export async function authenticate(req: Request, res: Response, next: NextFunction) {
+   const authHeader = req.headers.authorization;
+   
+   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+@@ -38,8 +38,25 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
+ 
+   try {
+     const decoded = jwt.verify(token, jwtSecret) as { userId: string; role: Role };
++
++    // The JWT only proves *identity* here — it is not trusted for the
++    // user's current role or active status. Those can change at any
++    // time (an admin promotes/demotes someone, or deactivates them),
++    // and a 7-day token must reflect that immediately, not after the
++    // token happens to expire. One extra indexed lookup per request
++    // is negligible at this app's scale and removes an entire class
++    // of "why does my role still say CUSTOMER" bugs.
++    const user = await prisma.user.findUnique({
++      where: { id: decoded.userId },
++      select: { role: true, isActive: true }
++    });
++
++    if (!user || !user.isActive) {
++      return res.status(401).json({ error: 'Hisob faol emas yoki topilmadi' });
++    }
++
+     req.userId = decoded.userId;
+-    req.userRole = decoded.role;
++    req.userRole = user.role;
+     next();
+   } catch (error) {
+     return res.status(401).json({ error: 'Noto\'g\'ri yoki muddati tugagan token' });
+diff --git a/src/api/client.ts b/src/api/client.ts
+index c85a1ec..17f2a58 100644
+--- a/src/api/client.ts
++++ b/src/api/client.ts
+@@ -298,7 +298,7 @@ class ApiClient {
+   }
+ 
+   async getAdminCafes(page = 1) {
+-    return this.request(`/admin/cafes?page=${page}`);
++    return this.request<{ cafes: any[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/admin/cafes?page=${page}`);
+   }
+ 
+   async createCafe(data: any) {
+diff --git a/src/pages/AdminPages.tsx b/src/pages/AdminPages.tsx
+index 972c289..5c99e8b 100644
+--- a/src/pages/AdminPages.tsx
++++ b/src/pages/AdminPages.tsx
+@@ -150,8 +150,7 @@ function AdminCafes({ onNavigate }: { onNavigate: (page: Page) => void }) {
+     const loadCafes = async () => {
+       try {
+         const result = await api.getAdminCafes();
+-        console.log(result);
+-        setCafes(result.data?.cafes || result.cafes || result.data || []);
++        setCafes(result.cafes || []);
+       } catch (error) {
+         console.error('Cafes loading error:', error);
+       } finally {
+@@ -161,7 +160,6 @@ function AdminCafes({ onNavigate }: { onNavigate: (page: Page) => void }) {
+ 
+     loadCafes();
+   }, []);
+-  alert('ADMIN CAFES ISHLAYAPTI');
+   return (
+     <div className="min-h-screen bg-cream-50 pb-24">
+       <div className="px-6 pt-12 pb-4">
+@@ -271,13 +269,11 @@ function AdminAddCafe({ onNavigate }: { onNavigate: (page: Page) => void }) {
+     }
+ 
+     try {
+-      const result = await api.createCafe({
++      await api.createCafe({
+       ...form,
+       branchAddress: form.branchAddress || form.address,
+     });
+ 
+-      console.log('Cafe created:', result);
+-
+       setSuccess(true);
+ 
+       setTimeout(() => onNavigate('admin-cafes'), 2000);
+-- 
+2.43.0
+

@@ -1,6 +1,3 @@
-// CaféPass Database Schema — Multi-tenant SaaS
-// PostgreSQL via Prisma ORM
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,9 +7,307 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================================
-// ENUMS
-// ============================================================
+model User {
+  id               String            @id @default(cuid())
+  phone            String            @unique
+  name             String
+  role             Role              @default(CUSTOMER)
+  avatarUrl        String?
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  auditLogs        AuditLog[]        @relation("AuditActor")
+  cafeStaff        CafeStaff[]
+  customerProfile  CustomerProfile?
+  otpVerifications OTPVerification[]
+  sessions         Session[]
+
+  @@index([phone])
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userAgent String?
+  ipAddress String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OTPVerification {
+  id         String    @id @default(cuid())
+  phone      String
+  code       String
+  status     OTPStatus @default(PENDING)
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  verifiedAt DateTime?
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+
+  @@index([phone, status])
+  @@index([expiresAt])
+}
+
+model CustomerProfile {
+  id                  String               @id @default(cuid())
+  userId              String               @unique
+  totalPoints         Int                  @default(0)
+  totalVisits         Int                  @default(0)
+  totalSpent          Int                  @default(0)
+  level               CustomerLevel        @default(BRONZE)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteCafes       FavoriteCafe[]
+  giftCards           GiftCard[]           @relation("GiftCardOwner")
+  giftCardRedemptions GiftCard[]           @relation("GiftCardRedeemer")
+  loyaltyTransactions LoyaltyTransaction[]
+  purchases           Purchase[]
+  qrSessions          QRSession[]
+  rewardRedemptions   RewardRedemption[]
+
+  @@index([userId])
+  @@index([level])
+  @@index([totalPoints])
+}
+
+model FavoriteCafe {
+  id         String          @id @default(cuid())
+  customerId String
+  cafeId     String
+  createdAt  DateTime        @default(now())
+  cafe       Cafe            @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  customer   CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, cafeId])
+}
+
+model Cafe {
+  id                  String               @id @default(cuid())
+  name                String
+  description         String?
+  address             String
+  city                String               @default("Namangan")
+  phone               String
+  logoUrl             String?
+  coverImageUrl       String?
+  workingHours        String               @default("08:00 — 22:00")
+  loyaltyRate         Int                  @default(5)
+  status              CafeStatus           @default(PENDING)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  branches            CafeBranch[]
+  staff               CafeStaff[]
+  favoriteCafes       FavoriteCafe[]
+  giftCards           GiftCard[]
+  loyaltyTransactions LoyaltyTransaction[]
+  promotions          Promotion[]
+  purchases           Purchase[]
+  qrSessions          QRSession[]
+  rewards             Reward[]
+
+  @@index([status])
+  @@index([city])
+}
+
+model CafeBranch {
+  id                  String               @id @default(cuid())
+  cafeId              String
+  name                String
+  address             String
+  phone               String?
+  isActive            Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  cafe                Cafe                 @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  staff               CafeStaff[]
+  loyaltyTransactions LoyaltyTransaction[]
+  purchases           Purchase[]
+
+  @@index([cafeId])
+}
+
+model CafeStaff {
+  id        String      @id @default(cuid())
+  userId    String
+  cafeId    String
+  branchId  String?
+  role      Role        @default(CAFE_EMPLOYEE)
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  branch    CafeBranch? @relation(fields: [branchId], references: [id])
+  cafe      Cafe        @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cafeId])
+  @@index([cafeId])
+  @@index([userId])
+}
+
+model Purchase {
+  id           String              @id @default(cuid())
+  customerId   String
+  cafeId       String
+  branchId     String?
+  staffId      String?
+  amount       Int
+  pointsEarned Int                 @default(0)
+  itemsJson    String
+  promotionId  String?
+  createdAt    DateTime            @default(now())
+  loyaltyTx    LoyaltyTransaction?
+  branch       CafeBranch?         @relation(fields: [branchId], references: [id])
+  cafe         Cafe                @relation(fields: [cafeId], references: [id])
+  customer     CustomerProfile     @relation(fields: [customerId], references: [id])
+  promotion    Promotion?          @relation(fields: [promotionId], references: [id])
+
+  @@index([customerId])
+  @@index([cafeId])
+  @@index([createdAt])
+  @@index([cafeId, createdAt])
+}
+
+model LoyaltyTransaction {
+  id               String                 @id @default(cuid())
+  customerId       String
+  cafeId           String
+  branchId         String?
+  type             LoyaltyTransactionType
+  points           Int
+  balanceAfter     Int
+  description      String
+  purchaseId       String?                @unique
+  performedBy      String?
+  createdAt        DateTime               @default(now())
+  branch           CafeBranch?            @relation(fields: [branchId], references: [id])
+  cafe             Cafe                   @relation(fields: [cafeId], references: [id])
+  customer         CustomerProfile        @relation(fields: [customerId], references: [id])
+  purchase         Purchase?              @relation(fields: [purchaseId], references: [id])
+  rewardRedemption RewardRedemption?
+
+  @@index([customerId, createdAt])
+  @@index([cafeId, createdAt])
+  @@index([type])
+}
+
+model Reward {
+  id          String             @id @default(cuid())
+  cafeId      String
+  name        String
+  description String?
+  pointsCost  Int
+  type        RewardType
+  value       Int?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  cafe        Cafe               @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  redemptions RewardRedemption[]
+
+  @@index([cafeId])
+  @@index([isActive])
+}
+
+model RewardRedemption {
+  id          String              @id @default(cuid())
+  customerId  String
+  rewardId    String
+  cafeId      String
+  pointsUsed  Int
+  status      String              @default("ACTIVE")
+  redeemedAt  DateTime            @default(now())
+  usedAt      DateTime?
+  loyaltyTxId String?             @unique
+  customer    CustomerProfile     @relation(fields: [customerId], references: [id])
+  loyaltyTx   LoyaltyTransaction? @relation(fields: [loyaltyTxId], references: [id])
+  reward      Reward              @relation(fields: [rewardId], references: [id])
+
+  @@index([customerId])
+  @@index([rewardId])
+}
+
+model Promotion {
+  id              String        @id @default(cuid())
+  cafeId          String
+  title           String
+  description     String?
+  type            PromotionType
+  multiplier      Float?
+  discountPercent Int?
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  cafe            Cafe          @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  purchases       Purchase[]
+
+  @@index([cafeId])
+  @@index([isActive, startDate, endDate])
+}
+
+model GiftCard {
+  id             String           @id @default(cuid())
+  cafeId         String
+  code           String           @unique
+  balance        Int
+  originalAmount Int
+  status         GiftCardStatus   @default(ACTIVE)
+  purchasedBy    String?
+  redeemedBy     String?
+  createdAt      DateTime         @default(now())
+  expiresAt      DateTime
+  cafe           Cafe             @relation(fields: [cafeId], references: [id])
+  purchaser      CustomerProfile? @relation("GiftCardOwner", fields: [purchasedBy], references: [id])
+  redeemer       CustomerProfile? @relation("GiftCardRedeemer", fields: [redeemedBy], references: [id])
+
+  @@index([code])
+  @@index([cafeId])
+  @@index([status])
+}
+
+model QRSession {
+  id         String          @id @default(cuid())
+  customerId String
+  cafeId     String?
+  token      String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime        @default(now())
+  cafe       Cafe?           @relation(fields: [cafeId], references: [id])
+  customer   CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([customerId])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
 
 enum Role {
   PLATFORM_ADMIN
@@ -69,364 +364,4 @@ enum OTPStatus {
   VERIFIED
   EXPIRED
   USED
-}
-
-// ============================================================
-// USERS & AUTH
-// ============================================================
-
-model User {
-  id        String   @id @default(cuid())
-  phone     String   @unique // Normalized: +998XXXXXXXXX
-  name      String
-  role      Role     @default(CUSTOMER)
-  avatarUrl String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  customerProfile  CustomerProfile?
-  cafeStaff        CafeStaff[]
-  otpVerifications OTPVerification[]
-  auditLogs        AuditLog[]        @relation("AuditActor")
-  sessions         Session[]
-
-  @@index([phone])
-  @@index([role])
-}
-
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  userAgent String?
-  ipAddress String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([userId])
-  @@index([expiresAt])
-}
-
-model OTPVerification {
-  id         String    @id @default(cuid())
-  phone      String
-  code       String // Hashed OTP
-  status     OTPStatus @default(PENDING)
-  attempts   Int       @default(0)
-  expiresAt  DateTime
-  createdAt  DateTime  @default(now())
-  verifiedAt DateTime?
-  userId     String?
-
-  user User? @relation(fields: [userId], references: [id])
-
-  @@index([phone, status])
-  @@index([expiresAt])
-}
-
-// ============================================================
-// CUSTOMER
-// ============================================================
-
-model CustomerProfile {
-  id          String        @id @default(cuid())
-  userId      String        @unique
-  totalPoints Int           @default(0) // Denormalized for performance; source of truth is LoyaltyTransaction
-  totalVisits Int           @default(0)
-  totalSpent  Int           @default(0) // in tiyin (100 UZS = 1 tiyin? No: in UZS directly)
-  level       CustomerLevel @default(BRONZE)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  loyaltyTransactions LoyaltyTransaction[]
-  rewardRedemptions   RewardRedemption[]
-  giftCards           GiftCard[]           @relation("GiftCardOwner")
-  giftCardRedemptions GiftCard[]           @relation("GiftCardRedeemer")
-  purchases           Purchase[]
-  qrSessions          QRSession[]
-  favoriteCafes       FavoriteCafe[]
-
-  @@index([userId])
-  @@index([level])
-  @@index([totalPoints])
-}
-
-model FavoriteCafe {
-  id         String   @id @default(cuid())
-  customerId String
-  cafeId     String
-  createdAt  DateTime @default(now())
-
-  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  cafe     Cafe            @relation(fields: [cafeId], references: [id], onDelete: Cascade)
-
-  @@unique([customerId, cafeId])
-}
-
-// ============================================================
-// CAFÉ (Multi-tenant)
-// ============================================================
-
-model Cafe {
-  id            String     @id @default(cuid())
-  name          String
-  description   String?
-  address       String
-  city          String     @default("Namangan")
-  phone         String
-  logoUrl       String?
-  coverImageUrl String?
-  workingHours  String     @default("08:00 — 22:00")
-  loyaltyRate   Int        @default(5) // Points per 1000 UZS spent
-  status        CafeStatus @default(PENDING)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-
-  // Relations
-  branches            CafeBranch[]
-  staff               CafeStaff[]
-  purchases           Purchase[]
-  rewards             Reward[]
-  promotions          Promotion[]
-  giftCards           GiftCard[]
-  loyaltyTransactions LoyaltyTransaction[]
-  qrSessions          QRSession[]
-  favoriteCafes       FavoriteCafe[]
-
-  @@index([status])
-  @@index([city])
-}
-
-model CafeBranch {
-  id        String   @id @default(cuid())
-  cafeId    String
-  name      String
-  address   String
-  phone     String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  cafe                Cafe                 @relation(fields: [cafeId], references: [id], onDelete: Cascade)
-  staff               CafeStaff[]
-  purchases           Purchase[]
-  loyaltyTransactions LoyaltyTransaction[]
-
-  @@index([cafeId])
-}
-
-model CafeStaff {
-  id        String   @id @default(cuid())
-  userId    String
-  cafeId    String
-  branchId  String?
-  role      Role     @default(CAFE_EMPLOYEE) // CAFE_OWNER or CAFE_EMPLOYEE
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cafe   Cafe        @relation(fields: [cafeId], references: [id], onDelete: Cascade)
-  branch CafeBranch? @relation(fields: [branchId], references: [id])
-
-  @@unique([userId, cafeId])
-  @@index([cafeId])
-  @@index([userId])
-}
-
-// ============================================================
-// PURCHASES & ORDERS
-// ============================================================
-
-model Purchase {
-  id           String   @id @default(cuid())
-  customerId   String
-  cafeId       String
-  branchId     String?
-  staffId      String? // CafeStaff.id who processed
-  amount       Int // Total in UZS
-  pointsEarned Int      @default(0)
-  itemsJson    String // JSON stringified array of items
-  promotionId  String?
-  createdAt    DateTime @default(now())
-
-  customer  CustomerProfile     @relation(fields: [customerId], references: [id])
-  cafe      Cafe                @relation(fields: [cafeId], references: [id])
-  branch    CafeBranch?         @relation(fields: [branchId], references: [id])
-  loyaltyTx LoyaltyTransaction?
-  promotion Promotion?          @relation(fields: [promotionId], references: [id])
-
-  @@index([customerId])
-  @@index([cafeId])
-  @@index([createdAt])
-  @@index([cafeId, createdAt])
-}
-
-// ============================================================
-// LOYALTY SYSTEM (Traceable Ledger)
-// ============================================================
-
-model LoyaltyTransaction {
-  id           String                 @id @default(cuid())
-  customerId   String
-  cafeId       String
-  branchId     String?
-  type         LoyaltyTransactionType
-  points       Int // Positive for earn/bonus, negative for redeem/expire
-  balanceAfter Int // Snapshot of balance after this transaction
-  description  String
-  purchaseId   String?                @unique // One-to-one with purchase if type=EARN
-  performedBy  String? // User ID who performed the action
-  createdAt    DateTime               @default(now())
-
-  customer         CustomerProfile   @relation(fields: [customerId], references: [id])
-  cafe             Cafe              @relation(fields: [cafeId], references: [id])
-  branch           CafeBranch?       @relation(fields: [branchId], references: [id])
-  purchase         Purchase?         @relation(fields: [purchaseId], references: [id])
-  rewardRedemption RewardRedemption?
-
-  @@index([customerId, createdAt])
-  @@index([cafeId, createdAt])
-  @@index([type])
-}
-
-// ============================================================
-// REWARDS
-// ============================================================
-
-model Reward {
-  id          String     @id @default(cuid())
-  cafeId      String
-  name        String
-  description String?
-  pointsCost  Int
-  type        RewardType
-  value       Int? // Discount percentage or item value
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  cafe        Cafe               @relation(fields: [cafeId], references: [id], onDelete: Cascade)
-  redemptions RewardRedemption[]
-
-  @@index([cafeId])
-  @@index([isActive])
-}
-
-model RewardRedemption {
-  id         String    @id @default(cuid())
-  customerId String
-  rewardId   String
-  cafeId     String
-  pointsUsed Int
-  status     String    @default("ACTIVE") // ACTIVE, USED, EXPIRED
-  redeemedAt DateTime  @default(now())
-  usedAt     DateTime?
-
-  customer    CustomerProfile     @relation(fields: [customerId], references: [id])
-  reward      Reward              @relation(fields: [rewardId], references: [id])
-  loyaltyTx   LoyaltyTransaction? @relation(fields: [loyaltyTxId], references: [id])
-  loyaltyTxId String?             @unique
-
-  @@index([customerId])
-  @@index([rewardId])
-}
-
-// ============================================================
-// PROMOTIONS
-// ============================================================
-
-model Promotion {
-  id              String        @id @default(cuid())
-  cafeId          String
-  title           String
-  description     String?
-  type            PromotionType
-  multiplier      Float? // For DOUBLE_POINTS
-  discountPercent Int? // For DISCOUNT
-  startDate       DateTime
-  endDate         DateTime
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  cafe      Cafe       @relation(fields: [cafeId], references: [id], onDelete: Cascade)
-  purchases Purchase[]
-
-  @@index([cafeId])
-  @@index([isActive, startDate, endDate])
-}
-
-// ============================================================
-// GIFT CARDS
-// ============================================================
-
-model GiftCard {
-  id             String         @id @default(cuid())
-  cafeId         String
-  code           String         @unique
-  balance        Int // Remaining in UZS
-  originalAmount Int
-  status         GiftCardStatus @default(ACTIVE)
-  purchasedBy    String? // Customer ID
-  redeemedBy     String? // Customer ID
-  createdAt      DateTime       @default(now())
-  expiresAt      DateTime
-
-  cafe      Cafe             @relation(fields: [cafeId], references: [id])
-  purchaser CustomerProfile? @relation("GiftCardOwner", fields: [purchasedBy], references: [id])
-  redeemer  CustomerProfile? @relation("GiftCardRedeemer", fields: [redeemedBy], references: [id])
-
-  @@index([code])
-  @@index([cafeId])
-  @@index([status])
-}
-
-// ============================================================
-// QR SESSIONS (Secure, short-lived)
-// ============================================================
-
-model QRSession {
-  id         String    @id @default(cuid())
-  customerId String
-  cafeId     String? // Set when scanned by specific café
-  token      String // Short-lived 6-digit code shown to the customer and typed in by staff
-  expiresAt  DateTime
-  usedAt     DateTime?
-  createdAt  DateTime  @default(now())
-
-  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  cafe     Cafe?           @relation(fields: [cafeId], references: [id])
-
-  @@index([token])
-  @@index([customerId])
-  @@index([expiresAt])
-}
-
-// ============================================================
-// AUDIT LOG
-// ============================================================
-
-model AuditLog {
-  id         String   @id @default(cuid())
-  actorId    String? // User who performed action
-  action     String // e.g., "cafe.created", "loyalty.adjusted"
-  entityType String // e.g., "Cafe", "Customer", "LoyaltyTransaction"
-  entityId   String? // ID of affected entity
-  metadata   String? // JSON stringified additional data
-  ipAddress  String?
-  createdAt  DateTime @default(now())
-
-  actor User? @relation("AuditActor", fields: [actorId], references: [id])
-
-  @@index([actorId])
-  @@index([action])
-  @@index([entityType, entityId])
-  @@index([createdAt])
 }

@@ -151,7 +151,7 @@ function AdminCafes({ onNavigate }: { onNavigate: (page: Page) => void }) {
       try {
         const result = await api.getAdminCafes();
         console.log(result);
-        setCafes(result.data?.cafes || result.cafes || result.data || []);
+        setCafes(result.cafes || []);
       } catch (error) {
         console.error('Cafes loading error:', error);
       } finally {

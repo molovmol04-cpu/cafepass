@@ -313,3 +313,54 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Server xatoligi' });
   }
 });
+
+authRouter.post('/bootstrap-admin', async (req, res) => {
+  try {
+    const secret = req.headers['x-admin-bootstrap-secret'];
+
+    if (!secret || secret !== process.env.ADMIN_BOOTSTRAP_SECRET) {
+      return res.status(403).json({ error: 'Ruxsat berilmadi' });
+    }
+
+    const { phone, name } = req.body;
+
+    if (!phone || !name) {
+      return res.status(400).json({ error: 'phone va name kerak' });
+    }
+
+    const normalizedPhone = phone.replace(/\D/g, '');
+
+    const formattedPhone = normalizedPhone.startsWith('998')
+      ? `+${normalizedPhone}`
+      : `+998${normalizedPhone}`;
+
+    const user = await prisma.user.upsert({
+      where: { phone: formattedPhone },
+      update: {
+        name,
+        role: 'PLATFORM_ADMIN',
+        isActive: true,
+      },
+      create: {
+        phone: formattedPhone,
+        name,
+        role: 'PLATFORM_ADMIN',
+        isActive: true,
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: 'PLATFORM_ADMIN yaratildi',
+      user: {
+        id: user.id,
+        phone: user.phone,
+        name: user.name,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('Bootstrap admin error:', error);
+    return res.status(500).json({ error: 'Server xatoligi' });
+  }
+});

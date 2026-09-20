@@ -226,7 +226,7 @@ adminRouter.patch('/cafes/:cafeId', async (req: Request, res: Response) => {
     const updates = req.body;
 
     const cafe = await prisma.cafe.update({
-      where: { id: cafeId },
+      where: { id: String(cafeId) },
       data: {
         name: updates.name ? sanitizeString(updates.name) : undefined,
         description: updates.description !== undefined ? sanitizeString(updates.description) : undefined,

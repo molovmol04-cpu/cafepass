@@ -239,7 +239,7 @@ authRouter.post('/verify-otp', async (req: Request, res: Response) => {
         phone: user.phone,
         name: user.name,
         role: user.role,
-        customerProfile: user.customerProfile
+	customerProfile: null
       }
     });
   } catch (error) {

@@ -62,7 +62,7 @@ customerRouter.get('/dashboard', async (req: Request, res: Response) => {
         createdAt: tx.createdAt
       })),
       favoriteCafes: profile.favoriteCafes.map(fc => ({
-        id: fc.cafe.id || '',
+        id: '',
         name: fc.cafe.name
       }))
     });
@@ -163,7 +163,7 @@ customerRouter.get('/cafes', async (req: Request, res: Response) => {
 customerRouter.get('/cafes/:cafeId', async (req: Request, res: Response) => {
   try {
     const cafe = await prisma.cafe.findUnique({
-      where: { id: req.params.cafeId, status: 'ACTIVE' },
+      where: { id: String(req.params.cafeId), status: 'ACTIVE' },
       include: {
         branches: { where: { isActive: true } },
         rewards: { where: { isActive: true } },
@@ -301,7 +301,7 @@ customerRouter.post('/favorite/:cafeId', async (req: Request, res: Response) => 
       where: {
         customerId_cafeId: {
           customerId: profile.id,
-          cafeId: req.params.cafeId
+          cafeId: String(req.params.cafeId)
         }
       }
     });
@@ -311,7 +311,7 @@ customerRouter.post('/favorite/:cafeId', async (req: Request, res: Response) => 
       res.json({ success: true, isFavorite: false });
     } else {
       await prisma.favoriteCafe.create({
-        data: { customerId: profile.id, cafeId: req.params.cafeId }
+	data: { customerId: profile.id, cafeId: String(req.params.cafeId) }
       });
       res.json({ success: true, isFavorite: true });
     }

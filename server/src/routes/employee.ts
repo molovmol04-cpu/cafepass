@@ -300,7 +300,9 @@ employeeRouter.post('/redeem-reward', async (req: Request, res: Response) => {
           points: -reward.pointsCost,
           balanceAfter: newBalance,
           description: `Sovg'a: ${reward.name}`,
-          rewardRedemptionId: redemption.id,
+          rewardRedemption: {
+  connect: { id: redemption.id }
+},
           performedBy: req.userId
         }
       });

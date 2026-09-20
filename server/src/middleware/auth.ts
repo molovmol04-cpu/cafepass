@@ -101,7 +101,7 @@ export function verifyCafeAccess(paramName: string = 'cafeId') {
       const staff = await prisma.cafeStaff.findFirst({
         where: {
           userId: req.userId,
-          cafeId: cafeId,
+          cafeId: String(cafeId),
           isActive: true
         }
       });

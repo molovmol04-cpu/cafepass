@@ -4,7 +4,8 @@
  * Falls back to demo mode when backend is unavailable
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface ApiResponse<T = any> {
   success?: boolean;
@@ -18,12 +19,12 @@ class ApiClient {
   private isDemoMode = false;
 
   constructor() {
-    // Load token from localStorage
     this.token = localStorage.getItem('cafepass_token');
   }
 
   setToken(token: string | null) {
     this.token = token;
+
     if (token) {
       localStorage.setItem('cafepass_token', token);
     } else {
@@ -35,9 +36,12 @@ class ApiClient {
     return this.token;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
     const url = `${API_URL}${endpoint}`;
-    
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -56,29 +60,48 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
-        // If 401, clear token and redirect to login
         if (response.status === 401) {
           this.setToken(null);
-          // Trigger auth state update
-          window.dispatchEvent(new CustomEvent('cafepass:unauthorized'));
+
+          window.dispatchEvent(
+            new CustomEvent('cafepass:unauthorized')
+          );
         }
-        // If 403, unauthorized access
+
         if (response.status === 403) {
-          return { error: data.error || 'Sizda bu bo\'limga kirish huquqi yo\'q', status: 403, ...data };
+          return {
+            error:
+              data.error ||
+              'Sizda bu bo‘limga kirish huquqi yo‘q',
+            status: 403,
+            ...data,
+          };
         }
-        return { error: data.error || 'Xatolik yuz berdi', status: response.status, ...data };
+
+        return {
+          error: data.error || 'Xatolik yuz berdi',
+          status: response.status,
+          ...data,
+        };
       }
 
       return data;
     } catch (error) {
       console.error('API request failed:', error);
-      // Only enable demo mode in development
+
       if (import.meta.env.DEV) {
         this.isDemoMode = true;
-        return { error: 'Server bilan bog\'lanishda xatolik', isDemoMode: true };
+
+        return {
+          error: 'Server bilan bog‘lanishda xatolik',
+          isDemoMode: true,
+        };
       }
-      // In production, return error without demo mode
-      return { error: 'Server bilan bog\'lanishda xatolik. Iltimos, keyinroq urinib ko\'ring.' };
+
+      return {
+        error:
+          'Server bilan bog‘lanishda xatolik. Iltimos, keyinroq urinib ko‘ring.',
+      };
     }
   }
 
@@ -93,10 +116,18 @@ class ApiClient {
     });
   }
 
-  async verifyOTP(phone: string, code: string, name?: string) {
+  async verifyOTP(
+    phone: string,
+    code: string,
+    name?: string
+  ) {
     const result = await this.request('/auth/verify-otp', {
       method: 'POST',
-      body: JSON.stringify({ phone, code, name }),
+      body: JSON.stringify({
+        phone,
+        code,
+        name,
+      }),
     });
 
     if (result.token) {
@@ -107,7 +138,10 @@ class ApiClient {
   }
 
   async logout() {
-    await this.request('/auth/logout', { method: 'POST' });
+    await this.request('/auth/logout', {
+      method: 'POST',
+    });
+
     this.setToken(null);
   }
 
@@ -124,7 +158,9 @@ class ApiClient {
   }
 
   async generateQR() {
-    return this.request('/customer/qr', { method: 'POST' });
+    return this.request('/customer/qr', {
+      method: 'POST',
+    });
   }
 
   async getCustomerCafes() {
@@ -144,7 +180,9 @@ class ApiClient {
   }
 
   async toggleFavoriteCafe(cafeId: string) {
-    return this.request(`/customer/favorite/${cafeId}`, { method: 'POST' });
+    return this.request(`/customer/favorite/${cafeId}`, {
+      method: 'POST',
+    });
   }
 
   async getLeaderboard() {

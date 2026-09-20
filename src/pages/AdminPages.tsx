@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Home, Coffee, Users, BarChart3, FileText, ChevronLeft, Plus, Building2, MapPin, Phone, Clock, Check, Shield, Activity } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -142,49 +142,104 @@ function AdminDashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
   );
 }
 
-// ============================================================
-// ADMIN CAFES LIST
-// ============================================================
 function AdminCafes({ onNavigate }: { onNavigate: (page: Page) => void }) {
+  const [cafes, setCafes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCafes = async () => {
+      try {
+        const result = await api.getAdminCafes();
+        console.log(result);
+        setCafes(result.data?.cafes || result.cafes || result.data || []);
+      } catch (error) {
+        console.error('Cafes loading error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCafes();
+  }, []);
+  alert('ADMIN CAFES ISHLAYAPTI');
   return (
     <div className="min-h-screen bg-cream-50 pb-24">
       <div className="px-6 pt-12 pb-4">
-        <button onClick={() => onNavigate('admin-dashboard')} className="flex items-center gap-1 text-espresso-500 mb-4">
-          <ChevronLeft className="w-5 h-5" /><span className="text-sm">Ortga</span>
+        <button
+          onClick={() => onNavigate('admin-dashboard')}
+          className="flex items-center gap-1 text-espresso-500 mb-4"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          <span className="text-sm">Ortga</span>
         </button>
+
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-espresso-900">Kafelar</h1>
-          <button onClick={() => onNavigate('admin-add-cafe')} className="px-4 py-2 bg-coffee-500 text-white text-sm font-medium rounded-xl active:scale-95 transition-transform flex items-center gap-1">
+          <h1 className="font-display text-2xl font-bold text-espresso-900">
+            Kafelar
+          </h1>
+
+          <button
+            onClick={() => onNavigate('admin-add-cafe')}
+            className="px-4 py-2 bg-coffee-500 text-white text-sm font-medium rounded-xl active:scale-95 transition-transform flex items-center gap-1"
+          >
             <Plus className="w-4 h-4" /> Qo'shish
           </button>
         </div>
       </div>
+
       <div className="px-6 mt-4 space-y-3">
-        {DEMO_CAFES.map((cafe, i) => (
-          <motion.div key={cafe.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="p-4 bg-white rounded-2xl shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-coffee-100 to-coffee-200 flex items-center justify-center flex-shrink-0">
-                <Coffee className="w-6 h-6 text-coffee-600" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-espresso-900">{cafe.name}</h3>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusColor(cafe.status)}`}>
-                    {getStatusName(cafe.status)}
-                  </span>
+        {loading ? (
+          <p className="text-center text-espresso-500">Yuklanmoqda...</p>
+        ) : cafes.length === 0 ? (
+          <p className="text-center text-espresso-500">Hozircha kafe yo'q</p>
+        ) : (
+          cafes.map((cafe, i) => (
+            <motion.div
+              key={cafe.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="p-4 bg-white rounded-2xl shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-coffee-100 to-coffee-200 flex items-center justify-center flex-shrink-0">
+                  <Coffee className="w-6 h-6 text-coffee-600" />
                 </div>
-                <p className="text-sm text-espresso-500 mt-0.5 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />{cafe.address}
-                </p>
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="text-xs text-espresso-400">{cafe.branches} filial</span>
-                  <span className="text-xs text-espresso-400">{cafe.staff} xodim</span>
-                  <span className="text-xs text-espresso-400">{cafe.purchases} sotuv</span>
+
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-espresso-900">
+                      {cafe.name}
+                    </h3>
+
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusColor(cafe.status)}`}
+                    >
+                      {getStatusName(cafe.status)}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-espresso-500 mt-0.5 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {cafe.address}
+                  </p>
+
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="text-xs text-espresso-400">
+                      {Array.isArray(cafe.branches) ? cafe.branches.length : 0} filial
+                    </span>
+                    <span className="text-xs text-espresso-400">
+                      {Array.isArray(cafe.staff) ? cafe.staff.length :  0} xodim
+                    </span>
+                    <span className="text-xs text-espresso-400">
+                      {cafe.purchases ?? 0} sotuv
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -216,7 +271,10 @@ function AdminAddCafe({ onNavigate }: { onNavigate: (page: Page) => void }) {
     }
 
     try {
-      const result = await api.createCafe(form);
+      const result = await api.createCafe({
+      ...form,
+      branchAddress: form.branchAddress || form.address,
+    });
 
       console.log('Cafe created:', result);
 
